@@ -1,4 +1,3 @@
-import requests
 
 from bs4 import BeautifulSoup
 
@@ -8,10 +7,10 @@ from reports.financial_report_agent import FinancialReportAgent
 
 def run():
     fn_report_agent = FinancialReportAgent(2605, 2020, 3, "C")
-
-    resp = requests.get(
-        f'{"https://mops.twse.com.tw/server-java/t164sb01?"}'
-        f'{"step=1&CO_ID=2605&SYEAR=2020&SSEASON=2&REPORT_ID=C"}')
+    print((fn_report_agent))
+    if not fn_report_agent:
+        print('can\'t find')
+        return
 
     """
     1XXX:資產總計, Total assets
