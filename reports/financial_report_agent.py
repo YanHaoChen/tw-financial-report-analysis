@@ -3,17 +3,18 @@ import logging
 
 from bs4 import BeautifulSoup
 
-from finance_td_parser import FinanceTDParser
-from accounting_toolbox import accounting_numbers_to_ints
+from reports.sheet import Sheet
+from reports.balance_sheet import BalanceSheet
+from reports.comprehensive_income_sheet import ComprehensiveIncomeSheet
 
 
 class FinancialReportAgent(object):
     def __new__(
-        cls,
-        company_id: str,
-        year: int,
-        season: int,
-        report_type: str
+            cls,
+            company_id: str,
+            year: int,
+            season: int,
+            report_type: str
     ):
         try:
             resp = requests.get(
@@ -37,24 +38,67 @@ class FinancialReportAgent(object):
             logging.exception(e)
 
     def __init__(
-        self,
-        company_id: str,
-        year: int,
-        season: int,
-        report_type: str,
+            self,
+            company_id: str,
+            year: int,
+            season: int,
+            report_type: str,
     ):
         self.company_id = company_id
         self.year = year
         self.season = season
         self.report_type = report_type
-        self.balance_sheet = self.soup.find('table')
-
-    def parser_balance_sheet(self, item_set: set):
-        return self.parser_sheet_to_dict(self.balance_sheet, item_set)
+        self.balance_sheet = BalanceSheet(self.soup.find('table'))
+        self.balance_sheet = self.parse_sheet_unit(self.balance_sheet, self.soup)
+        print(self.balance_sheet.dollar_unit)
+        self.comprehensive_income_sheet = ComprehensiveIncomeSheet(self.balance_sheet.sheet.find_next_sibling('table'))
+        self.comprehensive_income_sheet = self.parse_sheet_unit(self.comprehensive_income_sheet, self.soup)
+        print(self.comprehensive_income_sheet.dollar_unit)
+    # def balance_sheet_parser(self, item_set: set):
+    #     return self.parser_sheet_to_dict(self.balance_sheet, item_set)
+    #
+    # def comprehensive_income_parser(self, item_set: set):
+    #     return self.parse_sheet_to_dict(self.comprehensive_income, item_set)
 
     @staticmethod
-    def parser_sheet_to_dict(sheet, item_set):
-        td_parser = FinanceTDParser(sheet)
-        result = td_parser.search_key_string_set(item_set)
-        accounting_numbers_to_ints(result)
-        return result
+    def parse_sheet_unit(sheet: Sheet, report_html: BeautifulSoup):
+        unit_string = report_html.find(
+            'div', id=sheet.get_magic_id()
+        ).find_next(
+            'div', 'rptidx'
+        ).find(
+            'span', 'en'
+        ).string
+
+        if 'thousands' in unit_string:
+            sheet.set_dollar_unit(1000)
+        else:
+            logging.warning(f'Unkown unit: {unit_string}')
+
+        return sheet
+
+if __name__ == '__main__':
+    # search_comprehensive_income_set = {
+    #     'Total operating revenue',
+    #     'Total operating costs',
+    #     'Total basic earnings per share'
+    # }
+    fn_report_agent = FinancialReportAgent(2605, 2020, 3, "C")
+    search_balance_sheet_set = {
+        'Total assets',
+        'Total current assets',
+        'Total non-current assets',
+        'Total liabilities',
+        'Total current liabilities',
+        'Total non-current liabilities',
+        'Total equity'
+    }
+    balance_sheet_res = fn_report_agent.balance_sheet.parse_items_to_dict(search_balance_sheet_set)
+    print(balance_sheet_res)
+    search_comprehensive_income_sheet_set = {
+        'Total operating revenue',
+        'Total operating costs',
+        'Total basic earnings per share'
+    }
+    income_res = fn_report_agent.comprehensive_income_sheet.parse_items_to_dict(search_comprehensive_income_sheet_set)
+    print(income_res)
