@@ -1,7 +1,8 @@
+import abc
 from bs4 import BeautifulSoup
 
 
-class Sheet(object):
+class Sheet(abc.ABC):
     def __init__(self):
         self.magic_id = ""
         self.dollar_unit = 0
@@ -9,6 +10,10 @@ class Sheet(object):
 
     def set_dollar_unit(self, dollar_unit):
         self.dollar_unit = dollar_unit
+
+    @abc.abstractmethod
+    def set_magic_id(self):
+        pass
 
     def get_magic_id(self):
         return self.magic_id

@@ -50,10 +50,9 @@ class FinancialReportAgent(object):
         self.report_type = report_type
         self.balance_sheet = BalanceSheet(self.soup.find('table'))
         self.balance_sheet = self.parse_sheet_unit(self.balance_sheet, self.soup)
-        print(self.balance_sheet.dollar_unit)
         self.comprehensive_income_sheet = ComprehensiveIncomeSheet(self.balance_sheet.sheet.find_next_sibling('table'))
         self.comprehensive_income_sheet = self.parse_sheet_unit(self.comprehensive_income_sheet, self.soup)
-        print(self.comprehensive_income_sheet.dollar_unit)
+
     # def balance_sheet_parser(self, item_set: set):
     #     return self.parser_sheet_to_dict(self.balance_sheet, item_set)
     #
@@ -76,6 +75,7 @@ class FinancialReportAgent(object):
             logging.warning(f'Unkown unit: {unit_string}')
 
         return sheet
+
 
 if __name__ == '__main__':
     # search_comprehensive_income_set = {
