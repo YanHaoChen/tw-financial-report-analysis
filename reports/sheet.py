@@ -1,4 +1,6 @@
 import abc
+import re
+
 from bs4 import BeautifulSoup
 
 
@@ -35,8 +37,12 @@ class Sheet(abc.ABC):
                 if td_span:
                     span_item = td_span.string.lstrip()
                     if span_item in search_set:
+                        str_list = re.split(' |-', span_item.lower())
+                        formatted_item_name = f'{str_list[0]}'
+                        for this_str in str_list[1:]:
+                            formatted_item_name += f'{this_str[0].upper()}{this_str[1:]}'
                         td_value = td.find_next('td').find('ix:nonfraction').string
-                        result[span_item] = td_value
+                        result[formatted_item_name] = td_value
                         search_set.remove(span_item)
                         break
 

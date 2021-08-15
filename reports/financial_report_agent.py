@@ -83,7 +83,7 @@ if __name__ == '__main__':
     #     'Total operating costs',
     #     'Total basic earnings per share'
     # }
-    fn_report_agent = FinancialReportAgent(2605, 2020, 3, "C")
+    fn_report_agent = FinancialReportAgent("2605", 2020, 3, "C")
     search_balance_sheet_set = {
         'Total assets',
         'Total current assets',

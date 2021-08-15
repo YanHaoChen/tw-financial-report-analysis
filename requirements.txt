@@ -1,4 +1,5 @@
-apache-airflow==2.0.1
+apache-airflow==2.1.2
 autopep8
 beautifulsoup4
 requests
+apache-airflow-providers-mongo==2.0.0
