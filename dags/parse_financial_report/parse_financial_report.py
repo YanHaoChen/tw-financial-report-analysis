@@ -1,9 +1,9 @@
 import os
 import sys
-from airflow.utils.dates import days_ago
+from datetime import datetime
+
 from airflow import DAG
 from airflow.operators.python import BranchPythonOperator
-from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from functools import wraps
 
@@ -24,19 +24,20 @@ class EnvSetting(object):
 
 # 2633 A
 
-def init_dag(dag_id, stock_code, report_type):
+def init_dag(dag_id, stock_code, report_type, start_date):
     args = {
         'owner': 'sean',
     }
     dag = DAG(
         dag_id=dag_id,
         default_args=args,
-        schedule_interval=None,
-        start_date=days_ago(2),
+        max_active_runs=1,
+        schedule_interval='0 0 27 * *',
+        start_date=start_date,
     )
 
     @EnvSetting.append_project_to_path
-    def load_report_to_mongo(**context):
+    def load_report_to_mongo_by_stock_code(code, r_type, **context):
         from reports.financial_report_agent import FinancialReportAgent
         from toolbox.date_tool import DateTool
         from airflow.providers.mongo.hooks.mongo import MongoHook
@@ -45,9 +46,9 @@ def init_dag(dag_id, stock_code, report_type):
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
         season, season_year = DateTool.date_to_ex_season_and_year(year, month)
-        fn_report_agent = FinancialReportAgent(stock_code, season_year, season, report_type)
+        fn_report_agent = FinancialReportAgent(code, season_year, season, r_type)
         upload_key = {
-            'stock_code': stock_code,
+            'stock_code': code,
             'season_year': season_year,
             'season': season,
         }
@@ -78,15 +79,20 @@ def init_dag(dag_id, stock_code, report_type):
         upload_data.update(
             {
                 'comprehensiveIncomeSheetUnit': fn_report_agent.comprehensive_income_sheet.dollar_unit
-             }
+            }
         )
+        upload_data.update(upload_key)
         stock_db.financialReports.update(upload_key, upload_data, upsert=True)
 
         return 'done'
 
     load_report_to_mongo_task = BranchPythonOperator(
         task_id='load_report_to_mongo',
-        python_callable=load_report_to_mongo,
+        python_callable=load_report_to_mongo_by_stock_code,
+        op_kwargs={
+            'code': stock_code,
+            'r_type': report_type
+        },
         provide_context=True,
         dag=dag,
     )
@@ -106,4 +112,10 @@ def init_dag(dag_id, stock_code, report_type):
     return dag
 
 
-stock_2633_dag = init_dag('stock_2633', stock_code=2633, report_type='A')
+stock_report_mapping = {
+    2633: 'A',
+    5283: 'C'
+}
+
+stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
+stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))

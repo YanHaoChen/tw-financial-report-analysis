@@ -53,12 +53,6 @@ class FinancialReportAgent(object):
         self.comprehensive_income_sheet = ComprehensiveIncomeSheet(self.balance_sheet.sheet.find_next_sibling('table'))
         self.comprehensive_income_sheet = self.parse_sheet_unit(self.comprehensive_income_sheet, self.soup)
 
-    # def balance_sheet_parser(self, item_set: set):
-    #     return self.parser_sheet_to_dict(self.balance_sheet, item_set)
-    #
-    # def comprehensive_income_parser(self, item_set: set):
-    #     return self.parse_sheet_to_dict(self.comprehensive_income, item_set)
-
     @staticmethod
     def parse_sheet_unit(sheet: Sheet, report_html: BeautifulSoup):
         unit_string = report_html.find(
