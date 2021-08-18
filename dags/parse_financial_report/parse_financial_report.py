@@ -49,13 +49,15 @@ def init_dag(dag_id, stock_code, report_type, start_date):
         fn_report_agent = FinancialReportAgent(code, season_year, season, r_type)
         upload_key = {
             'stock_code': code,
-            'season_year': season_year,
+            'year': season_year,
             'season': season,
+            'year_and_season': season_year*10 + season
         }
         upload_data = {}
         if not fn_report_agent:
             return 'the_report_is_not_exist'
 
+        ''' Balance Sheet '''
         search_balance_sheet_set = {
             'Total assets',
             'Total current assets',
@@ -67,20 +69,47 @@ def init_dag(dag_id, stock_code, report_type, start_date):
         }
         balance_sheet_res = fn_report_agent.balance_sheet.parse_items_to_dict(search_balance_sheet_set)
         upload_data.update(balance_sheet_res)
-        upload_data.update({'balanceSheetUnit': fn_report_agent.balance_sheet.dollar_unit})
+        # record the unit of Balance Sheet
+        upload_data.update(
+            {
+                'balanceSheetUnit': fn_report_agent.balance_sheet.dollar_unit
+             }
+        )
+
+        ''' Comprehensive Income Sheet '''
         search_comprehensive_income_sheet_set = {
             'Total operating revenue',
             'Total operating costs',
+            'Total comprehensive income',
             'Total basic earnings per share'
         }
         income_res = fn_report_agent.comprehensive_income_sheet.parse_items_to_dict(
-            search_comprehensive_income_sheet_set)
+            search_comprehensive_income_sheet_set
+        )
         upload_data.update(income_res)
+
+        # Record the unit of Comprehensive Income Sheet
         upload_data.update(
             {
                 'comprehensiveIncomeSheetUnit': fn_report_agent.comprehensive_income_sheet.dollar_unit
             }
         )
+
+        ''' compute ROA and ROE '''
+        print(upload_data)
+        roa = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalAssets', 1)
+        roe = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
+        assets = upload_data.get('totalComprehensiveIncome', 0)
+        liabilities = upload_data.get('totalComprehensiveIncome', 0)
+        netWorth = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
+        upload_data.update(
+            {
+                'roa': round(roa, 4),
+                'roe': round(roe, 4)
+             }
+        )
+
+        ''' concat key and data '''
         upload_data.update(upload_key)
         stock_db.financialReports.update(upload_key, upload_data, upsert=True)
 

@@ -37,6 +37,7 @@ class Sheet(abc.ABC):
                 if td_span:
                     span_item = td_span.string.lstrip()
                     if span_item in search_set:
+                        span_item = re.split(' \\(|（', span_item)[0]
                         str_list = re.split(' |-', span_item.lower())
                         formatted_item_name = f'{str_list[0]}'
                         for this_str in str_list[1:]:
