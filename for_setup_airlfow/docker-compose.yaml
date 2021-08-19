@@ -64,13 +64,14 @@ x-airflow-common:
 services:
   mongo:
     image: mongo
+    hostname: stock_mongo
     restart: always
     ports:
       - 27017:27017
     environment:
-      - node.name=stock_mongo
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+
 
   postgres:
     image: postgres:13

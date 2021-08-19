@@ -31,8 +31,8 @@ def init_dag(dag_id, stock_code, report_type, start_date):
     dag = DAG(
         dag_id=dag_id,
         default_args=args,
-        max_active_runs=1,
-        schedule_interval='0 0 27 * *',
+        max_active_runs=2,
+        schedule_interval='0 0 * * *',
         start_date=start_date,
     )
 
@@ -65,7 +65,8 @@ def init_dag(dag_id, stock_code, report_type, start_date):
             'Total liabilities',
             'Total current liabilities',
             'Total non-current liabilities',
-            'Total equity'
+            'Total equity',
+            'Ordinary share'
         }
         balance_sheet_res = fn_report_agent.balance_sheet.parse_items_to_dict(search_balance_sheet_set)
         upload_data.update(balance_sheet_res)
@@ -81,7 +82,7 @@ def init_dag(dag_id, stock_code, report_type, start_date):
             'Total operating revenue',
             'Total operating costs',
             'Total comprehensive income',
-            'Total basic earnings per share'
+            'Total basic earnings per share',
         }
         income_res = fn_report_agent.comprehensive_income_sheet.parse_items_to_dict(
             search_comprehensive_income_sheet_set
@@ -95,17 +96,23 @@ def init_dag(dag_id, stock_code, report_type, start_date):
             }
         )
 
-        ''' compute ROA and ROE '''
+        ''' compute ROA, ROE and Book Value Per Share '''
         print(upload_data)
         roa = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalAssets', 1)
         roe = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
-        assets = upload_data.get('totalComprehensiveIncome', 0)
-        liabilities = upload_data.get('totalComprehensiveIncome', 0)
-        netWorth = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
+        assets = upload_data.get('totalAssets', 0)
+        liabilities = upload_data.get('totalLiabilities', 0)
+        net_worth = assets - liabilities
+        shares = (upload_data.get('ordinaryShare', 0) / 10)
+        book_value_per_share = net_worth / shares if shares > 0 else 0
+
         upload_data.update(
             {
                 'roa': round(roa, 4),
-                'roe': round(roe, 4)
+                'roe': round(roe, 4),
+                'netWorth': net_worth,
+                'shares': shares,
+                'bookValuePerShare': round(book_value_per_share, 4),
              }
         )
 
