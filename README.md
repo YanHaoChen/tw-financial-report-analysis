@@ -2,7 +2,7 @@
 
 遲早都要分析財報，怎麼不一開始就自己分析？
 
-### 已完成項目
+## 已完成項目
 * 財報定期抓取
     * 資產負載表
     * 綜合損益表
@@ -12,7 +12,7 @@
     * 每股淨值（bookValuePerShare）
     * EPS（totalBasicEarningsPerShare）
 
-### 環境安裝
+## 環境安裝
 
 在家目錄下安裝：
 ```bash
@@ -26,7 +26,7 @@ docker-compose up airflow-init
 docker-compose up -d
 ```
 
-### 建立 mongo 使用者
+## 建立 mongo 使用者
 
 ```bash
 docker exec -it airflow_mongo_1 bash
@@ -45,7 +45,7 @@ mongosh -u root -p example
 > exit
 exit
 ```
-### 建立 Mongo Connection
+## 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
 docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
@@ -65,7 +65,7 @@ docker-compose restart
 
 > Airflow Webserver 預設帳號密碼都是: airflow
 
-### 把檔案導入 `dags`
+## 把檔案導入 `dags`
 在把專案放進 `dags` 前，先把 `airflowignore.template` 放進去。
 
 ```bash
@@ -79,11 +79,11 @@ git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
 ```
 現在回到 Airflow Webserver， 等 3~5 分鐘就可以看到這個專案裡的拉報表的 DAG 囉！
 
-### 初始化專案
+## 初始化專案
 
 在 Airflow Webserver 上，開啟 `setup_parse_financial_report` DAG。把所需 package 在 Worker 上安裝好。
 
-### 開始拉報表囉！
+## 開始拉報表囉！
 
 在 Airflow Webserver 上，開啟 `stock_2633`。檢查是否有資料導入 Mongo：
 ```bash
@@ -117,8 +117,9 @@ stock> db.financialReports.find({})
     season: 1,
     year_and_season: 20191
   }
-]
+
 ```
+
 
 > 如果發生:
 >```
@@ -129,4 +130,27 @@ stock> db.financialReports.find({})
 >```
 >docker-compose restart
 >```
->
+
+## 新增其他公司財報
+1. 先到以下網址，查詢欲新增的公司。
+
+    [公開資訊觀測站-資產負債表查詢](https://mops.twse.com.tw/mops/web/t164sb03)
+
+2. 取得欲新增公司的財報類型。
+
+    點選 「投資人若需了解更詳細資訊可至XBRL資訊平台或電子書查詢」中的`XBRL資訊平台`。透過 URL 就可以知道財報的種類。
+    ```
+    # 以 1234 為例，財報類型為: REPORT_ID=C
+    https://mops.twse.com.tw/server-java/t164sb01?step=1&CO_ID=1234&SYEAR=2021&SSEASON=2&REPORT_ID=C
+    ```
+3. 新增對應 DAG。
+    至檔案 `dags/parse_financial_report/parse_financial_report.py` 的最下方，加入以下程式碼即可：
+    ```python
+    ...
+    stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
+    stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
+    # new
+    stock_1234 = init_dag(f'stock_1234', stock_code=1234, report_type='C', start_date=datetime(year=2019, month=4, day=1))
+
+    ```
+   > 目前規劃抓取 2019 年第一季以後的財報格式，所以 `start_date` 需大於 2019-04-01，才能正確抓取。

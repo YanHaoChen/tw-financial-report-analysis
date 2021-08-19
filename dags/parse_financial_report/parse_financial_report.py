@@ -97,7 +97,6 @@ def init_dag(dag_id, stock_code, report_type, start_date):
         )
 
         ''' compute ROA, ROE and Book Value Per Share '''
-        print(upload_data)
         roa = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalAssets', 1)
         roe = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
         assets = upload_data.get('totalAssets', 0)
@@ -146,12 +145,6 @@ def init_dag(dag_id, stock_code, report_type, start_date):
     load_report_to_mongo_task >> [the_report_is_not_exist_task, done_task]
 
     return dag
-
-
-stock_report_mapping = {
-    2633: 'A',
-    5283: 'C'
-}
 
 stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
 stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
