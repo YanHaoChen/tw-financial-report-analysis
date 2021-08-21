@@ -11,6 +11,7 @@
     * ROA
     * 每股淨值（bookValuePerShare）
     * EPS（totalBasicEarningsPerShare）
+    * 財報公佈日期（publishedDate）
 
 ## 環境安裝
 
@@ -92,32 +93,33 @@ mongosh -u airflower -p money stock
 stock> db.financialReports.find({})
 [
   {
-    _id: ObjectId("611e8ab916925b41b58f44cc"),
-    totalCurrentAssets: 21002761,
-    totalNonCurrentAssets: 408287953,
-    totalAssets: 429290714,
-    totalCurrentLiabilities: 5496779,
-    totalNonCurrentLiabilities: 352093178,
-    totalLiabilities: 357589957,
-    ordinaryShare: 56282930,
-    totalEquity: 71700757,
-    balanceSheetUnit: 1000,
-    totalOperatingRevenue: 11762190,
-    totalOperatingCosts: 6227537,
-    totalComprehensiveIncome: 2287744,
-    totalBasicEarningsPerShare: 0.41,
-    comprehensiveIncomeSheetUnit: 1000,
-    roa: 0.0053,
-    roe: 0.0319,
-    netWorth: 71700757,
-    shares: 5628293,
-    bookValuePerShare: 12.7393,
-    stock_code: 2633,
+    _id: ObjectId("6121166ea9629beb059291a4"),
+    stockCode: 2633,
     year: 2019,
     season: 1,
-    year_and_season: 20191
+    yearAndSeason: 20191,
+    publishedDate: ISODate("2019-05-10T08:36:04.000Z"),
+    balanceSheetUnit: 1000,
+    bookValuePerShare: 12.7393,
+    comprehensiveIncomeSheetUnit: 1000,
+    netWorth: 71700757,
+    ordinaryShare: 56282930,
+    roa: 0.0053,
+    roe: 0.0319,
+    shares: 5628293,
+    totalAssets: 429290714,
+    totalBasicEarningsPerShare: 0.41,
+    totalComprehensiveIncome: 2287744,
+    totalCurrentAssets: 21002761,
+    totalCurrentLiabilities: 5496779,
+    totalEquity: 71700757,
+    totalLiabilities: 357589957,
+    totalNonCurrentAssets: 408287953,
+    totalNonCurrentLiabilities: 352093178,
+    totalOperatingCosts: 6227537,
+    totalOperatingRevenue: 11762190
   }
-
+]
 ```
 
 
@@ -147,10 +149,17 @@ stock> db.financialReports.find({})
     至檔案 `dags/parse_financial_report/parse_financial_report.py` 的最下方，加入以下程式碼即可：
     ```python
     ...
-    stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
-    stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
+    stock_2633 = init_dag('stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
+    stock_5283 = init_dag('stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
     # new
-    stock_1234 = init_dag(f'stock_1234', stock_code=1234, report_type='C', start_date=datetime(year=2019, month=4, day=1))
-
+    stock_1234 = init_dag('stock_1234', stock_code=1234, report_type='C', start_date=datetime(year=2019, month=4, day=1))
+    # 每日執行則:
+    stock_1234 = init_dag(
+        'stock_1234',
+        stock_code=1234,
+        report_type='C',
+        start_date=datetime(year=2019, month=4, day=1),
+        schedule_interval='0 0 * * *'
+   )
     ```
    > 目前規劃抓取 2019 年第一季以後的財報格式，所以 `start_date` 需大於 2019-04-01，才能正確抓取。

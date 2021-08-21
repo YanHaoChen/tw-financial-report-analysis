@@ -49,10 +49,10 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         year, month, day = map(int, execution_date.split('-'))
         season, season_year = DateTool.date_to_ex_season_and_year(year, month)
         upload_key = {
-            'stock_code': code,
+            'stockCode': code,
             'year': season_year,
             'season': season,
-            'year_and_season': season_year * 10 + season
+            'yearAndSeason': season_year * 10 + season
         }
         has_report = stock_db.financialReports.find_one(upload_key)
         if has_report:
@@ -105,19 +105,19 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         if soup.h4 and soup.h4.text == '查無所需資料':
             return 'the_report_is_not_exist'
 
-        report_date_str = soup.center.table.table.find(attrs={'align': 'cetern'}).text
-        report_tw_year, *others = report_date_str.split('/')
-        report_year = DateTool.tw_year_to_year(int(report_tw_year))
-        tw_date_str = '/'.join([str(report_year)] + others)
-        report_date = datetime.strptime(tw_date_str, '%Y/%m/%d %H:%M:%S')
+        published_date_str = soup.center.table.table.find(attrs={'align': 'cetern'}).text
+        published_tw_year, *others = published_date_str.split('/')
+        published_year = DateTool.tw_year_to_year(int(published_tw_year))
+        tw_date_str = '/'.join([str(published_year)] + others)
+        published_date = datetime.strptime(tw_date_str, '%Y/%m/%d %H:%M:%S')
         timezone = pytz.timezone('Asia/Taipei')
-        report_date = timezone.localize(report_date)
+        published_date = timezone.localize(published_date)
         upload_data = {
-            'stock_code': code,
+            'stockCode': code,
             'year': season_year,
             'season': season,
-            'year_and_season': season_year * 10 + season,
-            'uploaded_date': report_date
+            'yearAndSeason': season_year * 10 + season,
+            'publishedDate': published_date
         }
         stock_db.financialReports.insert(upload_data)
 
@@ -152,10 +152,10 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         season, season_year = DateTool.date_to_ex_season_and_year(year, month)
         fn_report_agent = FinancialReportAgent(code, season_year, season, r_type)
         upload_key = {
-            'stock_code': code,
+            'stockCode': code,
             'year': season_year,
             'season': season,
-            'year_and_season': season_year * 10 + season
+            'yearAndSeason': season_year * 10 + season,
         }
         upload_data = {}
         if not fn_report_agent:
@@ -259,5 +259,5 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
     return dag
 
 
-stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
-stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
+stock_2633 = init_dag('stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
+stock_5283 = init_dag('stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
