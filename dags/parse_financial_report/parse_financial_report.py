@@ -58,7 +58,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         if has_report:
             return 'report_already_in_mongo'
         else:
-            return 'checkout_report_released'
+            return 'check_report_released'
 
     check_report_in_mongo_task = BranchPythonOperator(
         task_id='check_report_in_mongo',
@@ -76,7 +76,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
     )
 
     @EnvSetting.append_project_to_path
-    def checkout_report_released(code, r_type, **context):
+    def check_report_released(code, **context):
         import requests
         from datetime import datetime
         import pytz
@@ -123,12 +123,11 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
         return 'load_report_to_mongo'
 
-    checkout_report_released_task = BranchPythonOperator(
-        task_id='checkout_report_released',
-        python_callable=checkout_report_released,
+    check_report_released_task = BranchPythonOperator(
+        task_id='check_report_released',
+        python_callable=check_report_released,
         op_kwargs={
             'code': stock_code,
-            'r_type': report_type
         },
         provide_context=True,
         trigger_rule='none_failed_or_skipped',
@@ -219,8 +218,6 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             }
         )
 
-        ''' concat key and data '''
-
         stock_db.financialReports.update(
             upload_key,
             {
@@ -252,8 +249,8 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         task_id='done',
         dag=dag
     )
-    check_report_in_mongo_task >> [report_already_in_mongo_task, checkout_report_released_task]
-    checkout_report_released_task >> [the_report_is_not_exist_task, load_report_to_mongo_task]
+    check_report_in_mongo_task >> [report_already_in_mongo_task, check_report_released_task]
+    check_report_released_task >> [the_report_is_not_exist_task, load_report_to_mongo_task]
     load_report_to_mongo_task >> [cant_get_the_report_task, done_task]
 
     return dag

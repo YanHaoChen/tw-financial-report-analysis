@@ -20,7 +20,7 @@ class DateTool:
             12: 3
         }
         season = ex_season_mapping[month]
-        season_year = year if year != 4 else year - 1
+        season_year = year if season != 4 else year - 1
 
         return season, season_year
 
