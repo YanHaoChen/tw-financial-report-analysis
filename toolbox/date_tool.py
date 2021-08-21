@@ -23,3 +23,11 @@ class DateTool:
         season_year = year if year != 4 else year - 1
 
         return season, season_year
+
+    @staticmethod
+    def to_tw_year(year: int) -> int:
+        return year - 1911
+
+    @staticmethod
+    def tw_year_to_year(year: int) -> int:
+        return year + 1911

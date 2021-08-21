@@ -18,7 +18,7 @@ class FinancialReportAgent(object):
     ):
         try:
             resp = requests.get(
-                f'{"https://mops.twse.com.tw/server-java/t164sb01?step=1&"}'
+                f'https://mops.twse.com.tw/server-java/t164sb01?step=1&'
                 f'CO_ID={company_id}&'
                 f'SYEAR={year}&'
                 f'SSEASON={season}&'

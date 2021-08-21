@@ -24,16 +24,120 @@ class EnvSetting(object):
 
 # 2633 A
 
-def init_dag(dag_id, stock_code, report_type, start_date):
+def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0 27 * *'):
     args = {
         'owner': 'sean',
     }
     dag = DAG(
         dag_id=dag_id,
         default_args=args,
-        max_active_runs=2,
-        schedule_interval='0 0 * * *',
+        max_active_runs=1,
+        concurrency=1,
+        schedule_interval=schedule_interval,
         start_date=start_date,
+    )
+
+    @EnvSetting.append_project_to_path
+    def check_report_in_mongo(code, **context):
+        from airflow.providers.mongo.hooks.mongo import MongoHook
+
+        from toolbox.date_tool import DateTool
+
+        mongo_hook = MongoHook(conn_id='stock_mongo')
+        stock_db = mongo_hook.get_conn().stock
+        execution_date = context['ds']
+        year, month, day = map(int, execution_date.split('-'))
+        season, season_year = DateTool.date_to_ex_season_and_year(year, month)
+        upload_key = {
+            'stock_code': code,
+            'year': season_year,
+            'season': season,
+            'year_and_season': season_year * 10 + season
+        }
+        has_report = stock_db.financialReports.find_one(upload_key)
+        if has_report:
+            return 'report_already_in_mongo'
+        else:
+            return 'checkout_report_released'
+
+    check_report_in_mongo_task = BranchPythonOperator(
+        task_id='check_report_in_mongo',
+        python_callable=check_report_in_mongo,
+        op_kwargs={
+            'code': stock_code,
+        },
+        provide_context=True,
+        dag=dag,
+    )
+
+    report_already_in_mongo_task = DummyOperator(
+        task_id='report_already_in_mongo',
+        dag=dag
+    )
+
+    @EnvSetting.append_project_to_path
+    def checkout_report_released(code, r_type, **context):
+        import requests
+        from datetime import datetime
+        import pytz
+
+        from airflow.providers.mongo.hooks.mongo import MongoHook
+        from bs4 import BeautifulSoup
+
+        from toolbox.date_tool import DateTool
+
+        mongo_hook = MongoHook(conn_id='stock_mongo')
+        stock_db = mongo_hook.get_conn().stock
+        execution_date = context['ds']
+        year, month, day = map(int, execution_date.split('-'))
+        season, season_year = DateTool.date_to_ex_season_and_year(year, month)
+        tw_year = DateTool.to_tw_year(season_year)
+
+        resp = requests.get(
+            f'https://doc.twse.com.tw/server-java/t57sb01?step=1&colorchg=1&'
+            f'co_id={code}&'
+            f'year={tw_year}&'
+            f'seamon={season}&'
+            f'mtype=A')
+        resp.encoding = 'big5'
+        soup = BeautifulSoup(resp.text, 'html.parser')
+
+        if soup.h4 and soup.h4.text == '查無所需資料':
+            return 'the_report_is_not_exist'
+
+        report_date_str = soup.center.table.table.find(attrs={'align': 'cetern'}).text
+        report_tw_year, *others = report_date_str.split('/')
+        report_year = DateTool.tw_year_to_year(int(report_tw_year))
+        tw_date_str = '/'.join([str(report_year)] + others)
+        report_date = datetime.strptime(tw_date_str, '%Y/%m/%d %H:%M:%S')
+        timezone = pytz.timezone('Asia/Taipei')
+        report_date = timezone.localize(report_date)
+        upload_data = {
+            'stock_code': code,
+            'year': season_year,
+            'season': season,
+            'year_and_season': season_year * 10 + season,
+            'uploaded_date': report_date
+        }
+        stock_db.financialReports.insert(upload_data)
+
+        return 'load_report_to_mongo'
+
+    checkout_report_released_task = BranchPythonOperator(
+        task_id='checkout_report_released',
+        python_callable=checkout_report_released,
+        op_kwargs={
+            'code': stock_code,
+            'r_type': report_type
+        },
+        provide_context=True,
+        trigger_rule='none_failed_or_skipped',
+        dag=dag,
+    )
+
+    the_report_is_not_exist_task = DummyOperator(
+        task_id='the_report_is_not_exist',
+        dag=dag
     )
 
     @EnvSetting.append_project_to_path
@@ -51,11 +155,11 @@ def init_dag(dag_id, stock_code, report_type, start_date):
             'stock_code': code,
             'year': season_year,
             'season': season,
-            'year_and_season': season_year*10 + season
+            'year_and_season': season_year * 10 + season
         }
         upload_data = {}
         if not fn_report_agent:
-            return 'the_report_is_not_exist'
+            return 'cant_get_the_report'
 
         ''' Balance Sheet '''
         search_balance_sheet_set = {
@@ -74,7 +178,7 @@ def init_dag(dag_id, stock_code, report_type, start_date):
         upload_data.update(
             {
                 'balanceSheetUnit': fn_report_agent.balance_sheet.dollar_unit
-             }
+            }
         )
 
         ''' Comprehensive Income Sheet '''
@@ -112,12 +216,18 @@ def init_dag(dag_id, stock_code, report_type, start_date):
                 'netWorth': net_worth,
                 'shares': shares,
                 'bookValuePerShare': round(book_value_per_share, 4),
-             }
+            }
         )
 
         ''' concat key and data '''
-        upload_data.update(upload_key)
-        stock_db.financialReports.update(upload_key, upload_data, upsert=True)
+
+        stock_db.financialReports.update(
+            upload_key,
+            {
+                "$set": upload_data
+            },
+            upsert=True
+        )
 
         return 'done'
 
@@ -128,12 +238,13 @@ def init_dag(dag_id, stock_code, report_type, start_date):
             'code': stock_code,
             'r_type': report_type
         },
+        trigger_rule='none_failed_or_skipped',
         provide_context=True,
         dag=dag,
     )
 
-    the_report_is_not_exist_task = DummyOperator(
-        task_id='the_report_is_not_exist',
+    cant_get_the_report_task = DummyOperator(
+        task_id='cant_get_the_report',
         dag=dag
     )
 
@@ -141,10 +252,12 @@ def init_dag(dag_id, stock_code, report_type, start_date):
         task_id='done',
         dag=dag
     )
-
-    load_report_to_mongo_task >> [the_report_is_not_exist_task, done_task]
+    check_report_in_mongo_task >> [report_already_in_mongo_task, checkout_report_released_task]
+    checkout_report_released_task >> [the_report_is_not_exist_task, load_report_to_mongo_task]
+    load_report_to_mongo_task >> [cant_get_the_report_task, done_task]
 
     return dag
+
 
 stock_2633 = init_dag(f'stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
 stock_5283 = init_dag(f'stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
