@@ -88,7 +88,7 @@ git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
 
 在 Airflow Webserver 上，開啟 `stock_2633`。檢查是否有資料導入 Mongo：
 ```bash
-docker exec -it test_airflow_mongo_1 bash
+docker exec -it airflow_mongo_1 bash
 mongosh -u airflower -p money stock
 stock> db.financialReports.find({})
 [
