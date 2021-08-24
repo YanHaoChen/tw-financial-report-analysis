@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+<body>
+<h1>Dashboard for financial report analysis</h1>
+<div id="chart" class="chart"></div>
+</body>
+<script src="{{url_for('static', filename='js/plotly-2.3.1.min.js')}}"></script>
+<script type="text/javascript">
+  var graphs = {{graphJSON | safe}};
+  Plotly.newPlot('chart', graphs, {});
+
+</script>
+</html>

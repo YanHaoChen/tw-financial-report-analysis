@@ -3,3 +3,6 @@ autopep8
 beautifulsoup4
 requests
 apache-airflow-providers-mongo==2.0.0
+flask==1.1.4
+plotly
+pandas
