@@ -1,13 +1,21 @@
 <!doctype html>
 <html>
+<head>
+    <link href="{{url_for('static', filename='css/dashboard.css')}}" rel="stylesheet">
+</head>
 <body>
-<h1>Dashboard for financial report analysis</h1>
-<div id="chart" class="chart"></div>
+    <h1>tw-financial-report-analysis</h1>
+    <h2>ROA</h2>
+    <div id="roaChart" class="roaChart"></div>
+    <h2>ROE</h2>
+    <div id="roeChart" class="roeChart"></div>
 </body>
 <script src="{{url_for('static', filename='js/plotly-2.3.1.min.js')}}"></script>
 <script type="text/javascript">
-  var graphs = {{graphJSON | safe}};
-  Plotly.newPlot('chart', graphs, {});
+  var roaGraph = {{roaJson | safe}};
+  Plotly.newPlot('roaChart', roaGraph, {});
+  var roeGraph = {{roeJson | safe}};
+  Plotly.newPlot('roeChart', roeGraph, {});
 
 </script>
 </html>
