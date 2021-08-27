@@ -122,17 +122,6 @@ stock> db.financialReports.find({})
 ]
 ```
 
-
-> 如果發生:
->```
->from reports.financial_report_agent import FinancialReportAgent
-> ModuleNotFoundError: No module named 'reports'
->```
-> 重啟 airflow 即可：
->```
->docker-compose restart
->```
-
 ## 新增其他公司財報
 1. 先到以下網址，查詢欲新增的公司。
 
