@@ -1,8 +1,8 @@
-apache-airflow==2.1.0
+apache-airflow==2.0.1
 autopep8
 beautifulsoup4
 requests
-apache-airflow-providers-mongo==2.0.0
+apache-airflow-providers-mongo==1.0.0
 plotly==5.2.1
 pandas==1.2.4
 dash==1.21.0

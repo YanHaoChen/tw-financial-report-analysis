@@ -47,7 +47,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_season_and_year(year, month)
+        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
         upload_key = {
             'stockCode': code,
             'year': season_year,
@@ -90,7 +90,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_season_and_year(year, month)
+        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
         tw_year = DateTool.to_tw_year(season_year)
 
         resp = requests.get(
@@ -204,19 +204,19 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             'yearAndSeason': DateTool.season_to_ex_year_and_season(season_year * 10 + season)
         })
 
-        if season != 1 and ex_season_report:
+        single_season_net_income = upload_data.get('totalComprehensiveIncome', 0)
+
+        if ex_season_report:
             avg_total_asset = (ex_season_report.get('totalAssets', 1) + upload_data.get('totalAssets', 1)) / 2
             avg_total_equity = (ex_season_report.get('totalEquity', 1) + upload_data.get('totalEquity', 1)) / 2
-            single_season_net_income = (upload_data.get('totalComprehensiveIncome', 0)
-                                        - ex_season_report.get('totalComprehensiveIncome', 0))
+
         else:
             avg_total_asset = upload_data.get('totalAssets', 1)
             avg_total_equity = upload_data.get('totalEquity', 1)
-            single_season_net_income = upload_data.get('totalComprehensiveIncome', 0)
 
         ''' compute ROA, ROE and Book Value Per Share '''
-        roa = single_season_net_income / avg_total_asset
-        roe = single_season_net_income / avg_total_equity
+        roa = single_season_net_income / avg_total_asset * 100
+        roe = single_season_net_income / avg_total_equity * 100
         assets = upload_data.get('totalAssets', 0)
         liabilities = upload_data.get('totalLiabilities', 0)
         net_worth = assets - liabilities
@@ -225,8 +225,8 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
         upload_data.update(
             {
-                'roa': round(roa, 4),
-                'roe': round(roe, 4),
+                'roa': round(roa, 2),
+                'roe': round(roe, 2),
                 'netWorth': net_worth,
                 'shares': shares,
                 'bookValuePerShare': round(book_value_per_share, 4),

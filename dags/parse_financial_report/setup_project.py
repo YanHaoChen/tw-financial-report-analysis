@@ -32,7 +32,7 @@ dag = DAG(
 
 check_requirements = BashOperator(
     task_id='check_requirements',
-    bash_command=f'pwd; pip install -r {EnvSetting.PROJECT_HOME}/dag/airflow_requirements.txt',
+    bash_command=f'pip3 install -r {EnvSetting.PROJECT_HOME}/airflow_requirements.txt',
     depends_on_past=True,
     dag=dag
 )

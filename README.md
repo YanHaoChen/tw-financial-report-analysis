@@ -49,7 +49,7 @@ exit
 ## 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
-docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
+docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==1.0.0
 
 # 刷新 Airflow Web
 docker-compose restart
