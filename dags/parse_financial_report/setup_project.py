@@ -1,12 +1,12 @@
 import os
 import sys
 from airflow.utils.dates import days_ago
+from airflow.settings import AIRFLOW_HOME
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 
 
 class EnvSetting(object):
-    AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
     PROJECT_HOME = f'{AIRFLOW_HOME}/dags/tw-financial-report-analysis'
 
     @staticmethod
@@ -32,7 +32,9 @@ dag = DAG(
 
 check_requirements = BashOperator(
     task_id='check_requirements',
-    bash_command=f'pip install -r {EnvSetting.PROJECT_HOME}/airflow_requirements.txt',
+    bash_command=f'pwd; pip install -r {EnvSetting.PROJECT_HOME}/dag/af_requirements.txt',
     depends_on_past=True,
     dag=dag
 )
+
+check_requirements

@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import datetime
 
+from airflow.settings import AIRFLOW_HOME
 from airflow import DAG
 from airflow.operators.python import BranchPythonOperator
 from airflow.operators.dummy import DummyOperator
@@ -9,7 +10,6 @@ from functools import wraps
 
 
 class EnvSetting(object):
-    AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
     PROJECT_HOME = f'{AIRFLOW_HOME}/dags/tw-financial-report-analysis'
 
     @staticmethod
@@ -148,7 +148,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_season_and_year(year, month)
+        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
         fn_report_agent = FinancialReportAgent(code, season_year, season, r_type)
         upload_key = {
             'stockCode': code,
@@ -199,14 +199,29 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             }
         )
 
+        ex_season_report = stock_db.financialReports.find_one({
+            'stockCode': code,
+            'yearAndSeason': DateTool.season_to_ex_year_and_season(season_year * 10 + season)
+        })
+
+        if season != 1 and ex_season_report:
+            avg_total_asset = (ex_season_report.get('totalAssets', 1) + upload_data.get('totalAssets', 1)) / 2
+            avg_total_equity = (ex_season_report.get('totalEquity', 1) + upload_data.get('totalEquity', 1)) / 2
+            single_season_net_income = (upload_data.get('totalComprehensiveIncome', 0)
+                                        - ex_season_report.get('totalComprehensiveIncome', 0))
+        else:
+            avg_total_asset = upload_data.get('totalAssets', 1)
+            avg_total_equity = upload_data.get('totalEquity', 1)
+            single_season_net_income = upload_data.get('totalComprehensiveIncome', 0)
+
         ''' compute ROA, ROE and Book Value Per Share '''
-        roa = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalAssets', 1)
-        roe = upload_data.get('totalComprehensiveIncome', 0) / upload_data.get('totalEquity', 1)
+        roa = single_season_net_income / avg_total_asset
+        roe = single_season_net_income / avg_total_equity
         assets = upload_data.get('totalAssets', 0)
         liabilities = upload_data.get('totalLiabilities', 0)
         net_worth = assets - liabilities
         shares = (upload_data.get('ordinaryShare', 0) / 10)
-        book_value_per_share = net_worth / shares if shares > 0 else 0
+        book_value_per_share = (net_worth / shares) if shares > 0 else 0
 
         upload_data.update(
             {

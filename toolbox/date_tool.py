@@ -4,7 +4,7 @@ from datetime import datetime
 class DateTool:
 
     @staticmethod
-    def date_to_ex_season_and_year(year, month):
+    def date_to_ex_year_and_season(year, month):
         ex_season_mapping = {
             1: 4,
             2: 4,
@@ -25,9 +25,21 @@ class DateTool:
         return season, season_year
 
     @staticmethod
+    def season_to_ex_year_and_season(now_year_and_season: int):
+        now_season = now_year_and_season % 10
+        now_year = now_year_and_season // 10
+        ex_season = now_season - 1
+        ex_year = now_year
+        if ex_season == 0:
+            ex_season = 4
+            ex_year -= 1
+        return ex_year * 10 + ex_season
+
+    @staticmethod
     def to_tw_year(year: int) -> int:
         return year - 1911
 
     @staticmethod
     def tw_year_to_year(year: int) -> int:
         return year + 1911
+
