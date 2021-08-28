@@ -20,13 +20,13 @@ class Sheet(abc.ABC):
     def get_magic_id(self):
         return self.magic_id
 
-    def parse_items_to_dict(self, item_set):
-        result = self.search_key_string_set(self.sheet, item_set)
+    def parse_items_to_dict(self, item_set, columns={1: ''}):
+        result = self.search_key_string_set(self.sheet, item_set, columns)
         self.sheet_str_to_number(result)
         return result
 
     @staticmethod
-    def search_key_string_set(sheet: BeautifulSoup, search_set: set):
+    def search_key_string_set(sheet: BeautifulSoup, search_set: set, columns):
         result = {}
 
         td = sheet.find_next('td')
@@ -42,8 +42,15 @@ class Sheet(abc.ABC):
                         formatted_item_name = f'{str_list[0]}'
                         for this_str in str_list[1:]:
                             formatted_item_name += f'{this_str[0].upper()}{this_str[1:]}'
-                        td_value = td.find_next('td').find('ix:nonfraction').string
-                        result[formatted_item_name] = td_value
+
+                        siblings_tds = td.find_next_siblings('td')
+                        for idx, prefix in columns.items():
+                            td_value = siblings_tds[idx - 1].find('ix:nonfraction').string
+                            if prefix != '':
+                                new_formatted = f'{formatted_item_name[0].upper()}{formatted_item_name[1:]}'
+                                result[f'{prefix}{new_formatted}'] = td_value
+                            else:
+                                result[formatted_item_name] = td_value
                         search_set.remove(span_item)
                         break
 

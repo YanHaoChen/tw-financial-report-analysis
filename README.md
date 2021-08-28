@@ -49,7 +49,7 @@ exit
 ## 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
-docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==1.0.0
+docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
 
 # 刷新 Airflow Web
 docker-compose restart
@@ -64,7 +64,9 @@ docker-compose restart
 * Password: money
 * Port: 27017
 
-> Airflow Webserver 預設帳號密碼都是: airflow
+> Airflow Webserver 的帳號密碼如下：
+> account: airflow
+> password: aLrfIow
 
 ## 把檔案導入 `dags`
 在把專案放進 `dags` 前，先把 `airflowignore.template` 放進去。
@@ -93,31 +95,31 @@ mongosh -u airflower -p money stock
 stock> db.financialReports.find({})
 [
   {
-    _id: ObjectId("6121166ea9629beb059291a4"),
+    _id: ObjectId("612a16f0163eec9d5d34d670"),
     stockCode: 2633,
-    year: 2019,
-    season: 1,
-    yearAndSeason: 20191,
-    publishedDate: ISODate("2019-05-10T08:36:04.000Z"),
+    year: 2021,
+    season: 2,
+    yearAndSeason: 20212,
+    publishedDate: ISODate("2021-08-05T08:24:03.000Z"),
     balanceSheetUnit: 1000,
-    bookValuePerShare: 12.7393,
+    bookValuePerShare: 11.7343,
     comprehensiveIncomeSheetUnit: 1000,
-    netWorth: 71700757,
+    netWorth: 66044317,
     ordinaryShare: 56282930,
-    roa: 0.0053,
-    roe: 0.0319,
+    roa: 0.12,
+    roe: 0.72,
     shares: 5628293,
-    totalAssets: 429290714,
-    totalBasicEarningsPerShare: 0.41,
-    totalComprehensiveIncome: 2287744,
-    totalCurrentAssets: 21002761,
-    totalCurrentLiabilities: 5496779,
-    totalEquity: 71700757,
-    totalLiabilities: 357589957,
-    totalNonCurrentAssets: 408287953,
-    totalNonCurrentLiabilities: 352093178,
-    totalOperatingCosts: 6227537,
-    totalOperatingRevenue: 11762190
+    totalAssets: 425359870,
+    totalBasicEarningsPerShare: 0.09,
+    totalComprehensiveIncome: 493284,
+    totalCurrentAssets: 42588522,
+    totalCurrentLiabilities: 18949504,
+    totalEquity: 66044317,
+    totalLiabilities: 359315553,
+    totalNonCurrentAssets: 382771348,
+    totalNonCurrentLiabilities: 340366049,
+    totalOperatingCosts: 6459969,
+    totalOperatingRevenue: 6101721
   }
 ]
 ```

@@ -187,8 +187,24 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             'Total comprehensive income',
             'Total basic earnings per share',
         }
+
+        if season == 3:
+            income_parse_columns = {
+                1: '',
+                3: 'cumulative'
+            }
+        elif season == 4:
+            income_parse_columns = {
+                1: 'cumulative',
+            }
+        else:
+            income_parse_columns = {
+                1: '',
+            }
+
         income_res = fn_report_agent.comprehensive_income_sheet.parse_items_to_dict(
-            search_comprehensive_income_sheet_set
+            item_set=search_comprehensive_income_sheet_set,
+            columns=income_parse_columns
         )
         upload_data.update(income_res)
 
@@ -201,12 +217,17 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
         ex_season_report = stock_db.financialReports.find_one({
             'stockCode': code,
-            'yearAndSeason': DateTool.season_to_ex_year_and_season(season_year * 10 + season)
+            'yearAndSeason': DateTool.season_to_ex_year_and_season(season_year * 10 + season),
         })
 
-        single_season_net_income = upload_data.get('totalComprehensiveIncome', 0)
-
         if ex_season_report:
+            if season == 4:
+                print(ex_season_report['yearAndSeason'])
+                upload_data['totalComprehensiveIncome'] = (
+                            upload_data.get('cumulativeTotalComprehensiveIncome') -
+                            ex_season_report.get('cumulativeTotalComprehensiveIncome'))
+                print(upload_data['totalComprehensiveIncome'])
+
             avg_total_asset = (ex_season_report.get('totalAssets', 1) + upload_data.get('totalAssets', 1)) / 2
             avg_total_equity = (ex_season_report.get('totalEquity', 1) + upload_data.get('totalEquity', 1)) / 2
 
@@ -214,9 +235,11 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             avg_total_asset = upload_data.get('totalAssets', 1)
             avg_total_equity = upload_data.get('totalEquity', 1)
 
+        single_season_net_income = upload_data.get('totalComprehensiveIncome', 0)
+
         ''' compute ROA, ROE and Book Value Per Share '''
-        roa = single_season_net_income / avg_total_asset * 100
-        roe = single_season_net_income / avg_total_equity * 100
+        roa = round(single_season_net_income / avg_total_asset * 100, 2)
+        roe = round(single_season_net_income / avg_total_equity * 100, 2)
         assets = upload_data.get('totalAssets', 0)
         liabilities = upload_data.get('totalLiabilities', 0)
         net_worth = assets - liabilities
@@ -225,8 +248,8 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
         upload_data.update(
             {
-                'roa': round(roa, 2),
-                'roe': round(roe, 2),
+                'roa': roa,
+                'roe': roe,
                 'netWorth': net_worth,
                 'shares': shares,
                 'bookValuePerShare': round(book_value_per_share, 4),
@@ -282,6 +305,14 @@ stock_2633 = init_dag(
 stock_5283 = init_dag(
     'stock_5283',
     stock_code=5283,
+    report_type='C',
+    start_date=datetime(year=2019, month=4, day=1),
+    schedule_interval='2 0 27 * *',
+)
+
+stock_2834 = init_dag(
+    'stock_2834',
+    stock_code=2834,
     report_type='C',
     start_date=datetime(year=2019, month=4, day=1),
     schedule_interval='2 0 27 * *',
