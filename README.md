@@ -17,21 +17,21 @@
 
 在家目錄下安裝：
 ```bash
-cd ~
-mkdir airflow
-cd airflow
-curl -LfO 'https://github.com/YanHaoChen/tw-financial-report-analysis/raw/main/for_setup_airlfow/docker-compose.yaml'
-mkdir ./dags ./logs ./plugins
-echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
-docker-compose up airflow-init
-docker-compose up -d
+$ cd ~
+$ mkdir airflow
+$ cd airflow
+$ curl -LfO 'https://github.com/YanHaoChen/tw-financial-report-analysis/raw/main/for_setup_airlfow/docker-compose.yaml'
+$ mkdir ./dags ./logs ./plugins
+$ echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
+$docker-compose up airflow-init
+$ docker-compose up -d
 ```
 
 ## 建立 mongo 使用者
 
 ```bash
-docker exec -it airflow_mongo_1 bash
-mongosh -u root -p example
+$ docker exec -it airflow_mongo_1 bash
+$ mongosh -u root -p example
 
 > use stock
 > db.createUser(
@@ -43,16 +43,17 @@ mongosh -u root -p example
 		]
 	}
 )
+
 > exit
-exit
+$ exit
 ```
 ## 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
-docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
+$ docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
 
 # 刷新 Airflow Web
-docker-compose restart
+$ docker-compose restart
 ```
 接下來，連進 Airflow Webserver `127.0.0.1:8080`。點選 Admin -> Connections -> 點選加號(Add a new record)。再照以下項目填寫：
 
@@ -72,13 +73,13 @@ docker-compose restart
 在把專案放進 `dags` 前，先把 `airflowignore.template` 放進去。
 
 ```bash
-cd ./dags
-curl -LfO 'https://github.com/YanHaoChen/tw-financial-report-analysis/raw/main/for_setup_airlfow/airflowignore.template'
-mv airflowignore.template .airflowignore
+$ cd ./dags
+$ curl -LfO 'https://github.com/YanHaoChen/tw-financial-report-analysis/raw/main/for_setup_airlfow/airflowignore.template'
+$ mv airflowignore.template .airflowignore
 ```
 現在把可以把專案拉下來囉！
 ```bash
-git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
+$ git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
 ```
 現在回到 Airflow Webserver， 等 3~5 分鐘就可以看到這個專案裡的拉報表的 DAG 囉！
 
@@ -90,8 +91,8 @@ git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
 
 在 Airflow Webserver 上，開啟 `stock_2633`。檢查是否有資料導入 Mongo：
 ```bash
-docker exec -it airflow_mongo_1 bash
-mongosh -u airflower -p money stock
+$ docker exec -it airflow_mongo_1 bash
+$ mongosh -u airflower -p money stock
 stock> db.financialReports.find({})
 [
   {
@@ -133,24 +134,59 @@ stock> db.financialReports.find({})
 
     點選 「投資人若需了解更詳細資訊可至XBRL資訊平台或電子書查詢」中的`XBRL資訊平台`。透過 URL 就可以知道財報的種類。
     ```
-    # 以 1234 為例，財報類型為: REPORT_ID=C
-    https://mops.twse.com.tw/server-java/t164sb01?step=1&CO_ID=1234&SYEAR=2021&SSEASON=2&REPORT_ID=C
+    # 以 2207 為例，財報類型為: REPORT_ID=C
+    https://mops.twse.com.tw/server-java/t164sb01?step=1&CO_ID=2207&SYEAR=2021&SSEASON=2&REPORT_ID=C
     ```
 3. 新增對應 DAG。
     至檔案 `dags/parse_financial_report/parse_financial_report.py` 的最下方，加入以下程式碼即可：
     ```python
     ...
-    stock_2633 = init_dag('stock_2633', stock_code=2633, report_type='A', start_date=datetime(year=2019, month=4, day=1))
-    stock_5283 = init_dag('stock_5283', stock_code=5283, report_type='C', start_date=datetime(year=2019, month=4, day=1))
-    # new
-    stock_1234 = init_dag('stock_1234', stock_code=1234, report_type='C', start_date=datetime(year=2019, month=4, day=1))
-    # 每日執行則:
-    stock_1234 = init_dag(
-        'stock_1234',
-        stock_code=1234,
+    stock_2633 = init_dag(
+        'stock_2633',
+        stock_code=2633,
+        report_type='A',
+        start_date=datetime(year=2019, month=4, day=1),
+        schedule_interval='1 0 * * *',
+    )
+    
+    stock_5283 = init_dag(
+        'stock_5283',
+        stock_code=5283,
         report_type='C',
         start_date=datetime(year=2019, month=4, day=1),
-        schedule_interval='0 0 * * *'
-   )
+        schedule_interval='2 0 * * *',
+    )
+    
+    stock_2207 = init_dag(
+        'stock_2207',
+        stock_code=2207,
+        report_type='C',
+        start_date=datetime(year=2019, month=4, day=1),
+        schedule_interval='3 0 * * *',
+    )
+
     ```
-   > 目前規劃抓取 2019 年第一季以後的財報格式，所以 `start_date` 需大於 2019-04-01，才能正確抓取。
+   > 目前規劃抓取 2019 年第一季以後的非金融財報格式，所以 `start_date` 需大於 2019-04-01 才能正確抓取，也暫時無法抓取銀行財報。
+
+## 看到圖表比較較有感覺嗎? 那你可以試試這個
+
+在 `web` 資料夾中，放了一個簡易 flask + plotly 的範例，來呈現 ROA 和 ROE。其執行方式，如下：
+
+```bash
+# 至專案目錄
+$ cd ~/airflow/dags/tw-financial-report-analysis/
+
+# 安裝相關套件
+$ pip3 install -r requirements.txt
+
+# 至 web 目錄下，並執行以下指令
+$ cd web
+$ flask run                                                                                                                                                        [±main ●]
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+```
+
+現在，你在可在透過 [127.0.0.1:5000](http://127.0.0.1:5000/) 看到 ROA 及 ROE 的圖表囉！

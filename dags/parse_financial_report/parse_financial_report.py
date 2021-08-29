@@ -299,7 +299,7 @@ stock_2633 = init_dag(
     stock_code=2633,
     report_type='A',
     start_date=datetime(year=2019, month=4, day=1),
-    schedule_interval='1 0 27 * *',
+    schedule_interval='1 0 * * *',
 )
 
 stock_5283 = init_dag(
@@ -307,13 +307,13 @@ stock_5283 = init_dag(
     stock_code=5283,
     report_type='C',
     start_date=datetime(year=2019, month=4, day=1),
-    schedule_interval='2 0 27 * *',
+    schedule_interval='2 0 * * *',
 )
 
-stock_2834 = init_dag(
-    'stock_2834',
-    stock_code=2834,
+stock_2207 = init_dag(
+    'stock_2207',
+    stock_code=2207,
     report_type='C',
     start_date=datetime(year=2019, month=4, day=1),
-    schedule_interval='2 0 27 * *',
+    schedule_interval='3 0 * * *',
 )
