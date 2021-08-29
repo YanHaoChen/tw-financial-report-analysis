@@ -189,4 +189,6 @@ $ flask run                                                                     
  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 ```
 
-現在，你在可在透過 [127.0.0.1:5000](http://127.0.0.1:5000/) 看到 ROA 及 ROE 的圖表囉！
+現在，你可以透過 [127.0.0.1:5000](http://127.0.0.1:5000/) 看到 ROA 及 ROE 的圖表囉！
+
+<img width="1440" alt="roa_with_flask_and_plotly" src="https://user-images.githubusercontent.com/10976112/131253954-fed1ee6c-82d0-4af2-b6ce-c7f8387ea747.png">
