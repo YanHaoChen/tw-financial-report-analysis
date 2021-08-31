@@ -22,10 +22,10 @@ class DateTool:
         season = ex_season_mapping[month]
         season_year = year if season != 4 else year - 1
 
-        return season, season_year
+        return season_year, season
 
     @staticmethod
-    def season_to_ex_year_and_season(now_year_and_season: int):
+    def season_to_ex_year_and_season_int(now_year_and_season: int):
         now_season = now_year_and_season % 10
         now_year = now_year_and_season // 10
         ex_season = now_season - 1

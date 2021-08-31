@@ -47,7 +47,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
+        season_year, season = DateTool.date_to_ex_year_and_season(year, month)
         upload_key = {
             'stockCode': code,
             'year': season_year,
@@ -90,7 +90,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
+        season_year, season = DateTool.date_to_ex_year_and_season(year, month)
         tw_year = DateTool.to_tw_year(season_year)
 
         resp = requests.get(
@@ -148,7 +148,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
         stock_db = mongo_hook.get_conn().stock
         execution_date = context['ds']
         year, month, day = map(int, execution_date.split('-'))
-        season, season_year = DateTool.date_to_ex_year_and_season(year, month)
+        season_year, season = DateTool.date_to_ex_year_and_season(year, month)
         fn_report_agent = FinancialReportAgent(code, season_year, season, r_type)
         upload_key = {
             'stockCode': code,
@@ -217,7 +217,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
         ex_season_report = stock_db.financialReports.find_one({
             'stockCode': code,
-            'yearAndSeason': DateTool.season_to_ex_year_and_season(season_year * 10 + season),
+            'yearAndSeason': DateTool.season_to_ex_year_and_season_int(season_year * 10 + season),
         })
 
         if ex_season_report:
