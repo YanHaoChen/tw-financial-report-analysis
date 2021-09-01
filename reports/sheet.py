@@ -15,7 +15,7 @@ class Sheet(abc.ABC):
 
     @abc.abstractmethod
     def set_magic_id(self):
-        pass
+        raise NotImplementedError
 
     def get_magic_id(self):
         return self.magic_id
