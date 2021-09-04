@@ -49,9 +49,9 @@ class FinancialReportAgent(object):
         self.season = season
         self.report_type = report_type
         self.balance_sheet = BalanceSheet(self.soup.find('table'))
-        self.balance_sheet = self.parse_sheet_unit(self.balance_sheet, self.soup)
+        self.parse_sheet_unit(self.balance_sheet, self.soup)
         self.comprehensive_income_sheet = ComprehensiveIncomeSheet(self.balance_sheet.sheet.find_next_sibling('table'))
-        self.comprehensive_income_sheet = self.parse_sheet_unit(self.comprehensive_income_sheet, self.soup)
+        self.parse_sheet_unit(self.comprehensive_income_sheet, self.soup)
 
     @staticmethod
     def parse_sheet_unit(sheet: Sheet, report_html: BeautifulSoup):
