@@ -3,9 +3,9 @@ import logging
 
 from bs4 import BeautifulSoup
 
-from reports.sheet import Sheet
-from reports.balance_sheet import BalanceSheet
-from reports.comprehensive_income_sheet import ComprehensiveIncomeSheet
+from reports.financial_reports.sheet import Sheet
+from reports.financial_reports.balance_sheet import BalanceSheet
+from reports.financial_reports.comprehensive_income_sheet import ComprehensiveIncomeSheet
 
 
 class FinancialReportAgent(object):

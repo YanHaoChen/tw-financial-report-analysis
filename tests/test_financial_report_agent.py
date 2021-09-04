@@ -1,4 +1,4 @@
-from reports.financial_report_agent import FinancialReportAgent
+from reports.financial_reports.financial_report_agent import FinancialReportAgent
 import unittest
 from unittest import mock
 

@@ -1,4 +1,3 @@
-import os
 import sys
 from datetime import datetime
 
@@ -141,7 +140,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
     @EnvSetting.append_project_to_path
     def load_report_to_mongo_by_stock_code(code, r_type, **context):
-        from reports.financial_report_agent import FinancialReportAgent
+        from reports.financial_reports.financial_report_agent import FinancialReportAgent
         from toolbox.date_tool import DateTool
         from airflow.providers.mongo.hooks.mongo import MongoHook
         mongo_hook = MongoHook(conn_id='stock_mongo')
