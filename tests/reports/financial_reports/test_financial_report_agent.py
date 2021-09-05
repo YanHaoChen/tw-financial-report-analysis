@@ -2,7 +2,7 @@ from reports.financial_reports.financial_report_agent import FinancialReportAgen
 import unittest
 from unittest import mock
 
-RESOURCE_PATH = './tests/resources'
+FINANCIAL_REPORT_RESOURCE_PATH = './tests/reports/financial_reports/resources'
 
 
 class FinancialReportAgentTestCase(unittest.TestCase):
@@ -19,7 +19,11 @@ class FinancialReportAgentTestCase(unittest.TestCase):
                        f'SSEASON=4&'
                        f'REPORT_ID=C'):
 
-            with open(f'{RESOURCE_PATH}/mock_financial_report_success_example.html', 'r', encoding='big5') as f:
+            with open(
+                    f'{FINANCIAL_REPORT_RESOURCE_PATH}/mock_financial_report_success_example.html',
+                    'r',
+                    encoding='big5'
+            ) as f:
                 success_html = f.read()
             return MockResponse(text=success_html)
         elif args[0] == (f'https://mops.twse.com.tw/server-java/t164sb01?step=1&'
@@ -28,12 +32,16 @@ class FinancialReportAgentTestCase(unittest.TestCase):
                          f'SSEASON=5&'
                          f'REPORT_ID=C'):
 
-            with open(f'{RESOURCE_PATH}/mock_financial_report_fail_example.html', 'r', encoding='big5') as f:
+            with open(
+                    f'{FINANCIAL_REPORT_RESOURCE_PATH}/mock_financial_report_fail_example.html',
+                    'r',
+                    encoding='big5'
+            ) as f:
                 fail_html = f.read()
             return MockResponse(text=fail_html)
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_get_financial_report_success(self, mock_get):
+    def test_get_financial_report_successfully(self, mock_get):
         agent = FinancialReportAgent(company_id='6666',
                                      year=2021,
                                      season=4,
@@ -59,7 +67,7 @@ class FinancialReportAgentTestCase(unittest.TestCase):
         self.assertEqual(us_result['totalAssets'], 5564612)
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_get_financial_report_when_file_is_not_exist_fail(self, mock_get):
+    def test_get_financial_report_when_file_is_not_exist_unsuccessfully(self, mock_get):
         agent = FinancialReportAgent(company_id='6666',
                                      year=2021,
                                      season=5,
@@ -73,5 +81,4 @@ class FinancialReportAgentTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RESOURCE_PATH = './resources'
     unittest.main()
