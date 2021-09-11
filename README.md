@@ -12,6 +12,7 @@
 * 財報定期抓取
     * 資產負載表
     * 綜合損益表
+    * 每月營業收入
 * 指標
     * ROE
     * ROA
@@ -21,7 +22,9 @@
 * 視覺化
     * ROA and ROE
 
-## 環境安裝
+## Get Start!
+
+### 環境安裝
 
 在家目錄下安裝：
 ```bash
@@ -35,7 +38,7 @@ $docker-compose up airflow-init
 $ docker-compose up -d
 ```
 
-## 建立 mongo 使用者
+### 建立 mongo 使用者
 
 ```bash
 $ docker exec -it airflow_mongo_1 bash
@@ -55,7 +58,7 @@ $ mongosh -u root -p example
 > exit
 $ exit
 ```
-## 建立 Mongo Connection
+### 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
 $ docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
@@ -77,7 +80,7 @@ $ docker-compose restart
 > account: airflow
 > password: aLrfIow
 
-## 把檔案導入 `dags`
+### 把檔案導入 `dags`
 在把專案放進 `dags` 前，先把 `airflowignore.template` 放進去。
 
 ```bash
@@ -91,11 +94,11 @@ $ git clone https://github.com/YanHaoChen/tw-financial-report-analysis.git
 ```
 現在回到 Airflow Webserver， 等 3~5 分鐘就可以看到這個專案裡的拉報表的 DAG 囉！
 
-## 初始化專案
+### 初始化專案
 
 在 Airflow Webserver 上，開啟 `setup_parse_financial_report` DAG。把所需 package 在 Worker 上安裝好。
 
-## 開始拉報表囉！
+### 開始拉報表囉！
 
 在 Airflow Webserver 上，開啟 `stock_2633`。檢查是否有資料導入 Mongo：
 ```bash
@@ -133,7 +136,7 @@ stock> db.financialReports.find({})
 ]
 ```
 
-## 新增其他公司財報
+### 新增其他公司財報
 1. 先到以下網址，查詢欲新增的公司。
 
     [公開資訊觀測站-資產負債表查詢](https://mops.twse.com.tw/mops/web/t164sb03)
@@ -176,7 +179,7 @@ stock> db.financialReports.find({})
     ```
    > 目前規劃抓取 2019 年第一季以後的非金融財報格式，所以 `start_date` 需大於 2019-04-01 才能正確抓取，也暫時無法抓取銀行財報。
 
-## 看到圖表比較有感覺嗎? 那你可以試試這個
+### 看到圖表比較有感覺嗎? 那你可以試試這個
 
 在 `web` 資料夾中，放了一個簡易 flask + plotly 的範例，來呈現 ROA 和 ROE。其執行方式，如下：
 
@@ -200,3 +203,39 @@ $ flask run                                                                     
 現在，你可以透過 [127.0.0.1:5000](http://127.0.0.1:5000/) 看到 ROA 及 ROE 的圖表囉！
 
 <img width="1440" alt="roa_with_flask_and_plotly" src="https://user-images.githubusercontent.com/10976112/131253954-fed1ee6c-82d0-4af2-b6ce-c7f8387ea747.png">
+
+## 財報
+
+### 欄位對應
+
+同 XBRL 資訊平台上的英文版欄位名稱。例如：
+
+| XBRL 資訊平台上的英文版欄位 | Mongo 中對欄位名稱 |
+| --- | --- |
+| Total assets | totalAssets |
+
+某些欄位最會加上前綴 `cumulative` 表示是從當年年初`累計`至當季的意思。
+
+| XBRL 資訊平台上的英文版欄位 | Mongo 中對欄位名稱 |
+| --- | --- |
+| Total Comprehensive Income | cumulativeTotalComprehensiveIncome |
+
+## 每月營收
+
+### 欄位對應
+| 欄位名稱 | 敘述 |
+| --- | --- |
+| stockCode | 公司代號 |
+| year | 報表年份 |
+| month | 報表月份 |
+| company | 公司代號 |
+| industrialClass | 產業別 |
+| theMonthlyRevenue | 營業收入-當月營收 |
+| exMonthlyRevenue | 營業收入-上月營收 |
+| exYearTheMonthlyRevenue | 營業收入-去年當月營收 |
+| mom |營業收入-上月比較增減(%) |
+| yoy | 營業收入-去年同月增減(%) |
+| cumTheMonthlyRevenue | 累計營業收入-當月累計營收 |
+| cumExYearTheMonthlyRevenue | 累計營業收入-去年累計營收 |
+| cmocm | 累計營業收入-前期比較增減(%) |
+| note | 備註 |

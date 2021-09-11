@@ -1,3 +1,4 @@
+import logging
 import sys
 from datetime import datetime
 from datetime import timedelta
@@ -50,9 +51,11 @@ def init_dag(start_date, schedule_interval='30 12 12 * *'):
         mr_collection_struct = MonthlyRevenueCollection()
         monthly_revenue_collection = mr_collection_struct.bind_db(stock_db)
 
-        execution_date = context['ds']
-        year, month, day = map(int, execution_date.split('-'))
-        mr_results = MonthlyRevenue(tw_year=DateTool.to_tw_year(year), month=month).monthly_revenues
+        next_execution_date = context['next_ds']
+        target_year, target_month, _ = map(int, next_execution_date.split('-'))
+        logging.info(f'parsing {target_year}/{target_month} monthly revenue.')
+
+        mr_results = MonthlyRevenue(tw_year=DateTool.to_tw_year(target_year), month=target_month).monthly_revenues
 
         for result in mr_results:
             monthly_revenue_collection.update_one(
@@ -60,6 +63,8 @@ def init_dag(start_date, schedule_interval='30 12 12 * *'):
                 update={'$set': result},
                 upsert=True
             )
+
+        logging.info(f'{target_year}/{target_month} monthly revenue is finished!')
 
     parse_monthly_revenue_task = PythonOperator(
         task_id='parse_monthly_revenue',
@@ -76,4 +81,4 @@ def init_dag(start_date, schedule_interval='30 12 12 * *'):
     return dag
 
 
-parse_monthly_revenue_dag = init_dag(start_date=datetime(year=2019, month=1, day=1))
+parse_monthly_revenue_dag = init_dag(start_date=datetime(year=2018, month=12, day=1))

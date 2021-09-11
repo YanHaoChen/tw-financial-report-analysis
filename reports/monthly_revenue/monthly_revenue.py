@@ -1,3 +1,4 @@
+import logging
 import requests
 
 from db_bridges.mongo_bridge.collection_structure import CollectionStructure
@@ -54,7 +55,7 @@ class MonthlyRevenue(object):
 
         for company in resp.text.split('\r\n')[1:-1]:
             items = company.replace('"', '').split(',')
-            tw_year, month = tuple(map(int, items[1].split('/')))
+            tw_year, month = map(int, items[1].split('/'))
 
             self.monthly_revenues.append(
                 MonthlyRevenueCollection().document_operator(
