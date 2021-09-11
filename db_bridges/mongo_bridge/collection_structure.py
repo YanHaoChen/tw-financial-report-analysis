@@ -31,6 +31,16 @@ class CollectionStructure(abc.ABC):
     def data_fields(self):
         return self.__data_fields
 
+    def get_unique_fields(self, document):
+        unique_fields = {}
+        for key in self.unique_fields.keys():
+            unique_fields[key] = document[key]
+
+        return unique_fields
+
+    def bind_db(self, db):
+        return db[self.name]
+
     def document_operator(self, **kwargs):
         document_dict = {}
         document_dict.update(self.__data_fields)

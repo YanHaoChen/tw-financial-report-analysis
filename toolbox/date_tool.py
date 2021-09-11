@@ -43,3 +43,11 @@ class DateTool:
     def tw_year_to_year(year: int) -> int:
         return year + 1911
 
+    @staticmethod
+    def to_next_year_month(year: int, month: int) -> (int, int):
+        month += 1
+        if month == 13:
+            year += 1
+            month = 1
+        return year, month
+

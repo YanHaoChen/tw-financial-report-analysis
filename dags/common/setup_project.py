@@ -1,5 +1,7 @@
 import os
 import sys
+from functools import wraps
+
 from airflow.utils.dates import days_ago
 from airflow.settings import AIRFLOW_HOME
 from airflow import DAG
@@ -24,7 +26,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='setup_parse_financial_report',
+    dag_id='setup_tw_financial_report_analysis',
     default_args=args,
     schedule_interval='@daily',
     start_date=days_ago(1),
