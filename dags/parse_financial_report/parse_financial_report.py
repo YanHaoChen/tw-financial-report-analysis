@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime
+import logging
 from functools import wraps
 
 from airflow.settings import AIRFLOW_HOME
@@ -78,6 +79,7 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
     @EnvSetting.append_project_to_path
     def check_report_released(code, **context):
         import requests
+        from time import sleep
         from datetime import datetime
         import pytz
 
@@ -101,6 +103,9 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             f'mtype=A')
         resp.encoding = 'big5'
         soup = BeautifulSoup(resp.text, 'html.parser')
+
+        logging.info(f'sleep 5 seconds.')
+        sleep(5)
 
         if soup.h4 and soup.h4.text == '查無所需資料':
             return 'the_report_is_not_exist'
@@ -141,6 +146,8 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
 
     @EnvSetting.append_project_to_path
     def load_report_to_mongo_by_stock_code(code, r_type, **context):
+        from time import sleep
+
         from reports.financial_reports.financial_report_agent import FinancialReportAgent
         from toolbox.date_tool import DateTool
         from airflow.providers.mongo.hooks.mongo import MongoHook
@@ -157,6 +164,10 @@ def init_dag(dag_id, stock_code, report_type, start_date, schedule_interval='0 0
             'yearAndSeason': season_year * 10 + season,
         }
         upload_data = {}
+
+        logging.info(f'sleep 5 seconds.')
+        sleep(5)
+
         if not fn_report_agent:
             return 'cant_get_the_report'
 
