@@ -22,7 +22,7 @@
 * 視覺化
     * ROA and ROE
 
-## Get Start!
+## Get Started!
 
 ### 環境安裝
 
