@@ -25,7 +25,7 @@ class EnvSetting(object):
 
 # 2633 A
 
-def init_dag(stock_code, start_date, schedule_interval='30 12 * * *'):
+def init_dag(stock_code, start_date, schedule_interval='30 12 1 * *'):
     args = {
         'owner': 'sean',
     }

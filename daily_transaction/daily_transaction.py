@@ -20,11 +20,11 @@ class DailyTransactionsCollection(CollectionStructure):
         return {
             'tradeVolume': 0,
             'amount': 0,
-            'openingPrice': 0,
-            'highestPrice': 0,
-            'lowestPrice': 0,
-            'closingPrice': 0,
-            'closingDiff': 0,
+            'openingPrice': 0.0,
+            'highestPrice': 0.0,
+            'lowestPrice': 0.0,
+            'closingPrice': 0.0,
+            'closingDiff': 0.0,
             'transaction': 0,
         }
 
