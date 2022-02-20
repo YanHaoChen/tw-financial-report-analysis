@@ -1,7 +1,28 @@
 from datetime import datetime
+import time
 
 
 class DateTool:
+
+    @staticmethod
+    def date_to_timestamp(year: int, month: int, day: int, end=False):
+        if end:
+            this_date = datetime(
+                year=year,
+                month=month,
+                day=day,
+                hour=23,
+                minute=59,
+                second=59
+            )
+        else:
+            this_date = datetime(
+                year=year,
+                month=month,
+                day=day
+            )
+
+        return int(time.mktime(this_date.timetuple()))
 
     @staticmethod
     def date_to_ex_year_and_season(year, month):

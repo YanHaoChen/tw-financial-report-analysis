@@ -3,6 +3,7 @@ import requests
 from db_bridges.mongo_bridge.collection_structure import CollectionStructure
 from toolbox.date_tool import DateTool
 
+
 class DailyTransactionsCollection(CollectionStructure):
     def set_name(self):
             return 'dailyTransactions'
