@@ -34,14 +34,14 @@ $ cd airflow
 $ curl -LfO 'https://github.com/YanHaoChen/tw-financial-report-analysis/raw/main/for_setup_airlfow/docker-compose.yaml'
 $ mkdir ./dags ./logs ./plugins
 $ echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
-$docker-compose up airflow-init
+$ docker-compose up airflow-init
 $ docker-compose up -d
 ```
 
 ### 建立 mongo 使用者
 
 ```bash
-$ docker exec -it airflow_mongo_1 bash
+$ docker exec -it airflow-mongo-1 bash
 $ mongosh -u root -p example
 
 > use stock
@@ -61,7 +61,7 @@ $ exit
 ### 建立 Mongo Connection
 在建立之前，先讓 Airflow Webserver 新增 Mongo 的 Connection Type。
 ```
-$ docker exec -it airflow_airflow-webserver_1 pip3 install apache-airflow-providers-mongo==2.0.0
+$ docker exec -it airflow-airflow-webserver-1 pip3 install apache-airflow-providers-mongo==2.0.0
 
 # 刷新 Airflow Web
 $ docker-compose restart
